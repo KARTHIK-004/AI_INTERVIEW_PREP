@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/client";
+import { createUser, updateUser, getUserByFirebaseUid } from "@/actions/user";
 
 const AuthContext = createContext({});
 
@@ -18,7 +19,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userData = {
+          firebaseUid: user.uid,
+          email: user.email,
+          name: user.displayName,
+          imageUrl: user.photoURL,
+        };
+        try {
+          const existingUser = await getUserByFirebaseUid(user.uid);
+          if (existingUser) {
+            await updateUser(user.uid, userData);
+          } else {
+            await createUser(userData);
+          }
+        } catch (error) {
+          console.error("Failed to create or update user:", error);
+        }
+      }
       setCurrentUser(user);
       setLoading(false);
     });
@@ -26,27 +45,23 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  // Sign up with email and password
   const signup = (email, password) => {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
-  // Login with email and password
   const login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  // Login with Google
   const loginWithGoogle = () => {
     return signInWithPopup(auth, googleProvider);
   };
 
-  // Logout
   const logout = () => {
+    setCurrentUser(null);
     return signOut(auth);
   };
 
-  // Reset password
   const resetPassword = (email) => {
     return sendPasswordResetEmail(auth, email);
   };
