@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import {
   Form,
   FormControl,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { registerSchema } from "@/features/auth/schema/register-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import GithubButton from "@/features/auth/components/github-button";
+import GoogleButton from "@/features/auth/components/google-button";
 
 export function RegisterForm({ className }) {
   const [loading, startTransition] = useTransition();
@@ -31,9 +32,20 @@ export function RegisterForm({ className }) {
     },
   });
 
-  const onSubmit = async () => {
-    startTransition(() => {
-      toast.success("Account created successfully!");
+  const { signup } = useAuth();
+  const router = useRouter();
+
+  const onSubmit = async (data) => {
+    startTransition(async () => {
+      try {
+        await signup(data.email, data.password);
+        toast.success("Account created successfully!");
+        router.push("/login");
+      } catch (error) {
+        toast.error("Failed to create account: ", {
+          description: "Invalid email or password. Please try again.",
+        });
+      }
     });
   };
 
@@ -107,7 +119,7 @@ export function RegisterForm({ className }) {
               Or continue with
             </span>
           </div>
-          <GithubButton />
+          <GoogleButton />
         </div>
       </form>
     </Form>

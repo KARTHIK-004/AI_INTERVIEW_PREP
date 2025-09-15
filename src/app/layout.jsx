@@ -6,6 +6,7 @@ import { fontVariables } from "@/lib/font";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ActiveThemeProvider } from "@/components/active-theme";
 import { Toaster } from "sonner";
+import Providers from "@/components/providers";
 
 const META_THEME_COLORS = {
   light: "#ffffff",
@@ -63,10 +64,10 @@ export default async function RootLayout({ children }) {
           disableTransitionOnChange
           enableColorScheme
         >
-          <ActiveThemeProvider initialTheme={activeThemeValue}>
+          <Providers initialTheme={activeThemeValue}>
             <Toaster />
             {children}
-          </ActiveThemeProvider>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
